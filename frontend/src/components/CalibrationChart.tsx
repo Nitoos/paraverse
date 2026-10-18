@@ -23,7 +23,7 @@ export default function CalibrationChart() {
   if (error) return <p className="text-red-400 text-sm">{error}</p>;
   if (!cal) return <p className="text-gray-500 text-sm">Loading calibration…</p>;
 
-  const weights = cal.best_weights;
+  const weights = cal.optimal_weights;
   const maxW = Math.max(...Object.values(weights));
 
   return (
@@ -34,10 +34,13 @@ export default function CalibrationChart() {
         </h3>
         <div className="flex gap-4 text-xs">
           <span className="text-gray-400">
-            Tuning acc: <span className="text-white font-semibold">{(cal.tuning_accuracy * 100).toFixed(0)}%</span>
+            Tuning: <span className="text-white font-semibold">{(cal.calibrated_tuning_accuracy * 100).toFixed(0)}%</span>
           </span>
           <span className="text-gray-400">
-            Holdout acc: <span className="text-white font-semibold">{(cal.holdout_accuracy * 100).toFixed(0)}%</span>
+            Holdout: <span className="text-white font-semibold">{(cal.calibrated_holdout_accuracy * 100).toFixed(0)}%</span>
+          </span>
+          <span className="text-gray-400">
+            Baseline: <span className="text-gray-400">{(cal.uncalibrated_accuracy * 100).toFixed(0)}%</span>
           </span>
         </div>
       </div>
@@ -63,7 +66,7 @@ export default function CalibrationChart() {
       </div>
 
       <p className="text-xs text-gray-600">
-        Grid search over {cal.n_combos_tried.toLocaleString()} combinations · {6} tuning rollouts · 2 held-out
+        {cal.total_rollouts - cal.holdout_count} tuning rollouts · {cal.holdout_count} held-out · {cal.disclaimer}
       </p>
     </div>
   );

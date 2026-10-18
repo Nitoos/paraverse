@@ -79,12 +79,22 @@ def create_study(payload: StudyIn, session: Session = Depends(get_session)):
     session.commit()
     session.refresh(study)
 
+    created_variants = []
     for v in payload.variants:
         variant = Variant(study_id=study.id, url=v.url, label=v.label, notes=v.notes)
         session.add(variant)
+        created_variants.append(variant)
     session.commit()
-    session.refresh(study)
-    return study
+    for v in created_variants:
+        session.refresh(v)
+    return {
+        "id": study.id,
+        "name": study.name,
+        "task": study.task,
+        "mode": study.mode,
+        "status": study.status,
+        "variants": [{"id": v.id, "name": v.label, "url": v.url} for v in created_variants],
+    }
 
 
 @app.get("/api/studies")

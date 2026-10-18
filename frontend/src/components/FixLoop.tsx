@@ -1,13 +1,13 @@
 import { useState } from "react";
-import { type FixResponse, type MetricsResponse, suggestFixes } from "../api/client";
+import { type FixResponse, type VariantMetrics, suggestFixes } from "../api/client";
 
 interface Props {
   studyId: string;
-  metrics: MetricsResponse[];
+  variants: VariantMetrics[];
 }
 
-export default function FixLoop({ studyId, metrics }: Props) {
-  const [selectedVariant, setSelectedVariant] = useState(metrics[0]?.variant_id ?? "");
+export default function FixLoop({ studyId, variants }: Props) {
+  const [selectedVariant, setSelectedVariant] = useState(variants[0]?.variant_id ?? "");
   const [fixes, setFixes] = useState<FixResponse[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -35,9 +35,9 @@ export default function FixLoop({ studyId, metrics }: Props) {
           onChange={(e) => setSelectedVariant(e.target.value)}
           className="flex-1 bg-gray-800 text-white rounded-lg px-3 py-2 text-sm border border-gray-700 focus:outline-none"
         >
-          {metrics.map((m) => (
+          {variants.map((m) => (
             <option key={m.variant_id} value={m.variant_id}>
-              {m.variant_name} ({(m.abandonment_rate * 100).toFixed(0)}% abandoned)
+              {m.variant_label} (step {m.drop_off_step} drop-off)
             </option>
           ))}
         </select>

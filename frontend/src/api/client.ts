@@ -1,4 +1,4 @@
-const BASE = "http://localhost:8000";
+const BASE = "http://localhost:8000/api";
 
 export interface StudyPayload {
   task_goal: string;
@@ -25,17 +25,25 @@ export interface StepEvent {
   total_steps?: number;
 }
 
-export interface MetricsResponse {
+export interface VariantMetrics {
   variant_id: string;
-  variant_name: string;
+  variant_label: string;
   completion_rate: number;
-  abandonment_rate: number;
-  avg_steps: number;
-  avg_human_minutes: number;
-  hours_lost_per_1000: number;
+  avg_time_on_task: number;
+  drop_off_step: number;
+  confusion_rate: number;
+  funnel: number[];
+}
+
+export interface MetricsResponse {
+  completion_rate: number;
+  avg_time_on_task: number;
+  drop_off_step: number;
   confusion_rate: number;
   extra_minutes_vs_baseline: number;
+  hours_lost_per_year: number;
   support_tickets_avoided: number;
+  by_variant: VariantMetrics[];
 }
 
 export interface FixResponse {
@@ -46,20 +54,39 @@ export interface FixResponse {
 }
 
 export interface CalibrationResponse {
-  best_weights: Record<string, number>;
-  tuning_accuracy: number;
-  holdout_accuracy: number;
-  n_combos_tried: number;
+  optimal_weights: Record<string, number>;
+  calibrated_tuning_accuracy: number;
+  calibrated_holdout_accuracy: number;
+  uncalibrated_accuracy: number;
+  total_rollouts: number;
+  holdout_count: number;
+  disclaimer: string;
 }
 
 export async function createStudy(payload: StudyPayload): Promise<StudyResponse> {
+  const variants = Object.entries(payload.variant_urls).map(([label, url]) => ({
+    url,
+    label,
+    notes: "",
+  }));
+  const backendPayload = {
+    name: `Study ${new Date().toISOString().slice(0, 16)}`,
+    task: payload.task_goal,
+    mode: "live",
+    segment_mix: payload.segment_mix,
+    variants,
+  };
   const res = await fetch(`${BASE}/studies`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
+    body: JSON.stringify(backendPayload),
   });
   if (!res.ok) throw new Error(await res.text());
-  return res.json();
+  const study = await res.json();
+  return {
+    study_id: study.id,
+    variants: study.variants ?? variants.map((v, i) => ({ id: `v${i}`, name: v.label, url: v.url })),
+  };
 }
 
 export function streamSwarm(studyId: string, onEvent: (e: StepEvent) => void): EventSource {
@@ -82,15 +109,17 @@ export function replayStudy(studyId: string, onEvent: (e: StepEvent) => void): E
   return es;
 }
 
-export async function getMetrics(studyId: string): Promise<MetricsResponse[]> {
+export async function getMetrics(studyId: string): Promise<MetricsResponse> {
   const res = await fetch(`${BASE}/studies/${studyId}/metrics`);
   if (!res.ok) throw new Error(await res.text());
   return res.json();
 }
 
 export async function suggestFixes(studyId: string, variantId: string): Promise<FixResponse[]> {
-  const res = await fetch(`${BASE}/studies/${studyId}/fixes?variant_id=${variantId}`, {
+  const res = await fetch(`${BASE}/studies/${studyId}/fixes`, {
     method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ variant_id: variantId }),
   });
   if (!res.ok) throw new Error(await res.text());
   return res.json();
@@ -103,6 +132,6 @@ export async function getCalibration(): Promise<CalibrationResponse> {
 }
 
 export function screenshotUrl(path: string): string {
-  const encoded = encodeURIComponent(path);
-  return `${BASE}/screenshots?path=${encoded}`;
+  const rel = path.replace(/^.*data\/screenshots\//, "");
+  return `${BASE}/screenshots/${rel}`;
 }
