@@ -52,8 +52,8 @@ export default function AgentCard({ agent }: Props) {
   const isFailed = agent.done && agent.outcome !== "completed";
   const isConfused = !agent.done && !!latest?.confused;
 
-  const actionColor = latest ? (ACTION_COLORS[latest.action] ?? "#5f6368") : "#9aa0a6";
-  const actionLabel = latest ? (ACTION_LABEL[latest.action] ?? latest.action) : "Waiting";
+  const actionColor = latest?.action ? (ACTION_COLORS[latest.action] ?? "#5f6368") : "#9aa0a6";
+  const actionLabel = latest?.action ? (ACTION_LABEL[latest.action] ?? latest.action) : "Waiting";
   const stepNum = (latest?.step_index ?? 0) + 1;
   const totalSteps = agent.steps.length;
 

@@ -24,7 +24,7 @@ function riskBadge(completion: number, confusion: number) {
   return { label: "Healthy", bg: "#e6f4ea", color: "#137333", border: "#34a85340" };
 }
 
-export default function SegmentBreakdown({ bySegment, byVariant }: Props) {
+export default function SegmentBreakdown({ bySegment, byVariant: _byVariant }: Props) {
   const segments = Object.entries(bySegment).sort((a, b) => a[1].completion_rate - b[1].completion_rate);
   if (segments.length === 0) {
     return <p style={{ color: "#5f6368", fontSize: 13 }}>No segment data available.</p>;

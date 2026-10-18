@@ -9,6 +9,7 @@ from typing import AsyncGenerator, Optional
 from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, StreamingResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from sqlmodel import Session, select
 
@@ -316,3 +317,13 @@ def serve_screenshot(path: str):
     if not full_path.exists():
         raise HTTPException(404, "Screenshot not found")
     return FileResponse(str(full_path))
+
+
+# ── Serve React frontend (production) ────────────────────────────────────────
+_FRONTEND_DIST = Path(__file__).parent.parent / "frontend" / "dist"
+if _FRONTEND_DIST.exists():
+    app.mount("/assets", StaticFiles(directory=str(_FRONTEND_DIST / "assets")), name="assets")
+
+    @app.get("/{full_path:path}", include_in_schema=False)
+    def serve_spa(full_path: str):
+        return FileResponse(str(_FRONTEND_DIST / "index.html"))

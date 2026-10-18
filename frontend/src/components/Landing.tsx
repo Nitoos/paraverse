@@ -233,7 +233,7 @@ export default function Landing({ onStart, onDemo }: Props) {
             How it works
           </h2>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 32, position: "relative" }}>
-            {STEPS.map((s, i) => (
+            {STEPS.map((s) => (
               <div key={s.n} style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 14 }}>
                 <div style={{
                   width: 44, height: 44, borderRadius: 12,

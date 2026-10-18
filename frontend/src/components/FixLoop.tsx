@@ -146,7 +146,7 @@ export default function FixLoop({ studyId, variants }: Props) {
                       }}>
                         {style.label}
                       </span>
-                      <span style={{ fontSize: 11, color: "#80868b" }}>at Step {fix.step_index + 1}</span>
+                      <span style={{ fontSize: 11, color: "#80868b" }}>at Step {(fix as any).step_index != null ? (fix as any).step_index + 1 : '—'}</span>
                     </div>
                     <p style={{ margin: "0 0 8px", fontSize: 14, color: "#202124", lineHeight: 1.6 }}>{fix.suggestion}</p>
                     <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
