@@ -104,7 +104,7 @@ async def _gemini_step(prompt: str, screenshot_bytes: bytes) -> str:
         )
         return response.text
 
-    return await with_backoff(_call)
+    return await with_backoff(_call, max_retries=2)
 
 
 def _save_screenshot(run_id: str, step_index: int, data: bytes) -> str:

@@ -12,7 +12,11 @@ def get_engine():
     if _engine is None:
         DATA_DIR.mkdir(parents=True, exist_ok=True)
         SCREENSHOTS_DIR.mkdir(parents=True, exist_ok=True)
-        _engine = create_engine(f"sqlite:///{DB_PATH}", echo=False)
+        _engine = create_engine(
+            f"sqlite:///{DB_PATH}",
+            echo=False,
+            connect_args={"check_same_thread": False},
+        )
     return _engine
 
 

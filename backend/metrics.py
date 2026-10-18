@@ -70,15 +70,16 @@ def _compute_variant_metrics(
         if last_steps:
             drop_off_step = Counter(last_steps).most_common(1)[0][0]
 
-    # Confusion rate
+    # Confusion rate — exclude rate-limit errors (not user confusion)
     all_steps = [s for run in runs for s in steps_by_run.get(run.id, [])]
+    real_steps = [s for s in all_steps if "429" not in (s.thought or "") and "RESOURCE_EXHAUSTED" not in (s.thought or "")]
     confusion_rate = (
-        sum(1 for s in all_steps if s.confused) / len(all_steps)
-        if all_steps else 0.0
+        sum(1 for s in real_steps if s.confused) / len(real_steps)
+        if real_steps else 0.0
     )
 
     # Funnel: for each step index, what fraction of runs reached it
-    max_step = max((max((s.index for s in steps_by_run.get(r.id, []) or [0]), default=0) for r in runs), default=0)
+    max_step = max((max((s.index for s in steps_by_run.get(r.id, [])), default=0) for r in runs), default=0)
     funnel = []
     for i in range(max_step + 1):
         reached = sum(
@@ -96,6 +97,16 @@ def _compute_variant_metrics(
         confusion_rate=confusion_rate,
         funnel=funnel,
     )
+
+
+def _compute_segment_metrics(
+    segment: str,
+    runs: list[Run],
+    steps_by_run: dict[str, list[Step]],
+) -> VariantMetrics:
+    """Compute metrics for a named segment (reuses variant logic with a dummy variant)."""
+    dummy = Variant(id=segment, study_id="", label=segment, url="")
+    return _compute_variant_metrics(dummy, runs, steps_by_run)
 
 
 def compute_metrics(
@@ -132,16 +143,37 @@ def compute_metrics(
     overall_drop_off = by_variant[0].drop_off_step if by_variant else 0
     overall_confusion = sum(v.confusion_rate for v in by_variant) / len(by_variant)
 
-    # Extra minutes vs baseline (first variant is baseline)
+    # Extra minutes vs baseline: cost-of-failure adjusted
     extra_minutes = 0.0
     if len(by_variant) > 1:
-        baseline_time = by_variant[0].avg_time_on_task
-        worst_time = max(v.avg_time_on_task for v in by_variant[1:])
-        extra_minutes = max(0.0, (worst_time - baseline_time) / 60.0)
+        baseline = by_variant[0]
+        baseline_eff_time = baseline.avg_time_on_task / max(baseline.completion_rate, 0.1)
+        worst_eff_time = max(
+            v.avg_time_on_task / max(v.completion_rate, 0.1)
+            for v in by_variant[1:]
+        )
+        extra_minutes = max(0.0, (worst_eff_time - baseline_eff_time) / 60.0)
 
     hours_lost = compute_hours_lost(n_employees, freq_per_year, extra_minutes)
     confusion_delta = max(0.0, max((v.confusion_rate for v in by_variant[1:]), default=0.0) - by_variant[0].confusion_rate)
     tickets_avoided = confusion_delta * n_employees * freq_per_year * 0.02
+
+    # Segment breakdown: group runs by persona segment
+    persona_map: dict[str, str] = {}  # run_id -> segment
+    all_personas = session.exec(select(Persona).where(Persona.study_id == study_id)).all()
+    persona_segment: dict[str, str] = {str(p.id): p.segment for p in all_personas}
+    for run in all_runs:
+        seg = persona_segment.get(str(run.persona_id), "Unknown")
+        persona_map[str(run.id)] = seg
+
+    runs_by_segment: dict[str, list[Run]] = {}
+    for run in all_runs:
+        seg = persona_map.get(str(run.id), "Unknown")
+        runs_by_segment.setdefault(seg, []).append(run)
+
+    by_segment: dict[str, VariantMetrics] = {}
+    for seg, seg_runs in runs_by_segment.items():
+        by_segment[seg] = _compute_segment_metrics(seg, seg_runs, steps_by_run)
 
     return StudyMetrics(
         completion_rate=overall_completion,
@@ -149,6 +181,7 @@ def compute_metrics(
         drop_off_step=overall_drop_off,
         confusion_rate=overall_confusion,
         by_variant=by_variant,
+        by_segment=by_segment,
         extra_minutes_vs_baseline=extra_minutes,
         hours_lost_per_year=hours_lost,
         support_tickets_avoided=tickets_avoided,

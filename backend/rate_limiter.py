@@ -12,6 +12,11 @@ except ImportError:
         pass
 
 
+def _is_rate_limit(exc: Exception) -> bool:
+    msg = str(exc)
+    return "429" in msg or "RESOURCE_EXHAUSTED" in msg or isinstance(exc, ResourceExhausted)
+
+
 class TokenBucket:
     def __init__(self, rate_per_minute: int):
         self._rate = rate_per_minute / 60.0  # tokens per second
@@ -41,17 +46,19 @@ class TokenBucket:
 
 async def with_backoff(
     fn: Callable[[], Coroutine],
-    max_retries: int = 5,
+    max_retries: int = 6,
 ) -> Any:
     for attempt in range(max_retries):
         try:
             return await fn()
-        except ResourceExhausted:
+        except Exception as exc:
+            if not _is_rate_limit(exc):
+                raise
             if attempt == max_retries - 1:
                 raise
-            delay = min(2 ** attempt + random.uniform(0, 1), 60)
+            delay = min(2 ** attempt * 2 + random.uniform(0, 1), 30)
             await asyncio.sleep(delay)
-    raise ResourceExhausted("Max retries exceeded")
+    raise Exception("Max retries exceeded")
 
 
 # Module-level singleton

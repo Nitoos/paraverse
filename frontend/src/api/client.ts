@@ -35,6 +35,16 @@ export interface VariantMetrics {
   funnel: number[];
 }
 
+export interface SegmentMetrics {
+  variant_id: string;
+  variant_label: string;
+  completion_rate: number;
+  avg_time_on_task: number;
+  drop_off_step: number;
+  confusion_rate: number;
+  funnel: number[];
+}
+
 export interface MetricsResponse {
   completion_rate: number;
   avg_time_on_task: number;
@@ -44,6 +54,7 @@ export interface MetricsResponse {
   hours_lost_per_year: number;
   support_tickets_avoided: number;
   by_variant: VariantMetrics[];
+  by_segment?: Record<string, SegmentMetrics>;
 }
 
 export interface FixResponse {
@@ -111,6 +122,12 @@ export function replayStudy(studyId: string, onEvent: (e: StepEvent) => void): E
 
 export async function getMetrics(studyId: string): Promise<MetricsResponse> {
   const res = await fetch(`${BASE}/studies/${studyId}/metrics`);
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+export async function getFixes(studyId: string): Promise<FixResponse[]> {
+  const res = await fetch(`${BASE}/studies/${studyId}/fixes`);
   if (!res.ok) throw new Error(await res.text());
   return res.json();
 }

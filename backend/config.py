@@ -4,12 +4,13 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-AGENT_MODEL: str = os.getenv("GEMINI_AGENT_MODEL", "gemini-1.5-flash-latest")
-TEXT_MODEL: str = os.getenv("GEMINI_TEXT_MODEL", "gemini-1.5-flash-latest")
+AGENT_MODEL: str = os.getenv("GEMINI_AGENT_MODEL", "gemini-3.5-flash")
+TEXT_MODEL: str = os.getenv("GEMINI_TEXT_MODEL", "gemini-3.5-flash")
 GEMINI_RPM: int = int(os.getenv("GEMINI_RPM", "10"))
 GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
 
-DATA_DIR = Path("data")
+_ROOT = Path(__file__).parent.parent
+DATA_DIR = _ROOT / "data"
 SCREENSHOTS_DIR = DATA_DIR / "screenshots"
 DB_PATH: str = str(DATA_DIR / "paraverse.db")
 

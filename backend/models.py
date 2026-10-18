@@ -1,7 +1,10 @@
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 from uuid import uuid4
+
+def _now() -> datetime:
+    return datetime.now(timezone.utc)
 
 from sqlmodel import Field, SQLModel
 
@@ -11,7 +14,7 @@ class Study(SQLModel, table=True):
     name: str
     task: str
     segment_mix: str = "{}"  # JSON: {segment: count}
-    created: datetime = Field(default_factory=datetime.utcnow)
+    created: datetime = Field(default_factory=_now)
     status: str = "pending"  # pending | running | completed | error
     mode: str = "live"  # live | recorded
 
@@ -45,7 +48,7 @@ class Run(SQLModel, table=True):
     persona_id: str = Field(foreign_key="persona.id")
     outcome: Optional[str] = None  # completed | abandoned | error | step_cap
     duration_seconds: float = 0.0
-    started_at: datetime = Field(default_factory=datetime.utcnow)
+    started_at: datetime = Field(default_factory=_now)
     completed_at: Optional[datetime] = None
 
 
@@ -61,7 +64,7 @@ class Step(SQLModel, table=True):
     confused: bool = False
     confusion_reason: str = ""
     confidence: float = 1.0
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    timestamp: datetime = Field(default_factory=_now)
     human_time_seconds: float = 0.0
 
 

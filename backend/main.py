@@ -14,7 +14,7 @@ from sqlmodel import Session, select
 
 from backend.calibration import get_calibration
 from backend.config import FRONTEND_PORT
-from backend.database import get_session, init_db
+from backend.database import get_engine, get_session, init_db
 from backend.metrics import compute_metrics
 from backend.models import Fix, Persona, Run, Step, Study, Variant
 
@@ -37,8 +37,8 @@ app = FastAPI(title="Paraverse API", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[f"http://localhost:{FRONTEND_PORT}", "http://localhost:3000", "http://localhost:5173"],
-    allow_credentials=True,
+    allow_origins=["*"],
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -140,7 +140,11 @@ async def generate_personas_endpoint(
 
 async def _stream_queue(queue: asyncio.Queue) -> AsyncGenerator[str, None]:
     while True:
-        event = await queue.get()
+        try:
+            event = await asyncio.wait_for(queue.get(), timeout=15.0)
+        except asyncio.TimeoutError:
+            yield ": keepalive\n\n"
+            continue
         yield f"data: {json.dumps(event)}\n\n"
         if event.get("type") == "run_complete":
             break
@@ -171,20 +175,29 @@ async def stream_study(study_id: str, session: Session = Depends(get_session)):
     if not study:
         raise HTTPException(404, "Study not found")
 
-    segment_mix = json.loads(study.segment_mix)
-    existing = session.exec(select(Persona).where(Persona.study_id == study_id)).first()
-    if not existing:
-        from backend.persona_generator import generate_personas
-        await generate_personas(study_id, segment_mix)
+    # Snapshot before session closes
+    segment_mix_str = study.segment_mix
+    task_goal = study.task
 
     queue: asyncio.Queue = asyncio.Queue()
 
     async def run_and_stream():
+        from backend.persona_generator import generate_personas
         from backend.swarm_runner import run_study
-        await run_study(study_id, queue, study.task)
+        from sqlmodel import Session as S
+        with S(get_engine()) as bg_session:
+            existing = bg_session.exec(select(Persona).where(Persona.study_id == study_id)).first()
+        if not existing:
+            await generate_personas(study_id, json.loads(segment_mix_str))
+        await queue.put({"type": "run_starting", "study_id": study_id})
+        await run_study(study_id, queue, task_goal)
 
     asyncio.create_task(run_and_stream())
-    return StreamingResponse(_stream_queue(queue), media_type="text/event-stream")
+    return StreamingResponse(
+        _stream_queue(queue),
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+    )
 
 
 @app.get("/api/studies/{study_id}/replay")
@@ -196,8 +209,12 @@ async def replay_study_endpoint(study_id: str, session: Session = Depends(get_se
     queue: asyncio.Queue = asyncio.Queue()
 
     async def replay_and_stream():
-        from backend.swarm_runner import replay_study
-        await replay_study(study_id, queue)
+        try:
+            from backend.swarm_runner import replay_study
+            await replay_study(study_id, queue)
+        except Exception as exc:
+            await queue.put({"type": "error", "message": str(exc)})
+            await queue.put({"type": "run_complete", "study_id": study_id, "total_agents": 0})
 
     asyncio.create_task(replay_and_stream())
     return StreamingResponse(_stream_queue(queue), media_type="text/event-stream")
@@ -236,6 +253,18 @@ def get_metrics(
             }
             for v in metrics.by_variant
         ],
+        "by_segment": {
+            seg: {
+                "variant_id": m.variant_id,
+                "variant_label": m.variant_label,
+                "completion_rate": m.completion_rate,
+                "avg_time_on_task": m.avg_time_on_task,
+                "drop_off_step": m.drop_off_step,
+                "confusion_rate": m.confusion_rate,
+                "funnel": m.funnel,
+            }
+            for seg, m in metrics.by_segment.items()
+        },
     }
 
 

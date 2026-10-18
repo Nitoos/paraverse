@@ -145,30 +145,33 @@ def _parse_persona_json(raw: str, study_id: str, segment: str, index: int) -> Pe
     )
 
 
+import random as _random
+
+
+def _make_persona(study_id: str, segment: str) -> Persona:
+    """Build a persona from templates with small random variation — no Gemini call needed."""
+    seg_key = segment.lower().replace(" ", "_").replace("-", "_")
+    defaults = SEGMENT_DEFAULTS.get(seg_key, SEGMENT_DEFAULTS["new_hire"])
+    device = "mobile_375" if seg_key in MOBILE_SEGMENTS else "desktop_800"
+    return Persona(
+        study_id=study_id,
+        segment=segment,
+        tenure_years=max(0.1, defaults["tenure_years"] + _random.uniform(-0.5, 0.5)),
+        tech_literacy=max(1, min(5, defaults["tech_literacy"] + _random.randint(-1, 1))),
+        language_fluency=max(1, min(5, defaults["language_fluency"] + _random.randint(-1, 1))),
+        device=device,
+        patience_budget_steps=defaults["patience_budget_steps"],
+        patience_budget_seconds=defaults["patience_budget_seconds"],
+        accessibility_needs="[]",
+        behavioral_rules=json.dumps(defaults["behavioral_rules"]),
+    )
+
+
 async def generate_personas(study_id: str, segment_mix: dict[str, int]) -> list[Persona]:
     personas: list[Persona] = []
     for segment, count in segment_mix.items():
-        for i in range(count):
-            try:
-                raw = await _call_gemini(segment, i)
-                persona = _parse_persona_json(raw, study_id, segment, i)
-            except Exception:
-                # Fallback to defaults on Gemini error
-                defaults = SEGMENT_DEFAULTS.get(segment, SEGMENT_DEFAULTS["new_hire"])
-                device = "mobile_375" if segment in MOBILE_SEGMENTS else "desktop_800"
-                persona = Persona(
-                    study_id=study_id,
-                    segment=segment,
-                    tenure_years=defaults["tenure_years"],
-                    tech_literacy=defaults["tech_literacy"],
-                    language_fluency=defaults["language_fluency"],
-                    device=device,
-                    patience_budget_steps=defaults["patience_budget_steps"],
-                    patience_budget_seconds=defaults["patience_budget_seconds"],
-                    accessibility_needs="[]",
-                    behavioral_rules=json.dumps(defaults["behavioral_rules"]),
-                )
-            personas.append(persona)
+        for _ in range(count):
+            personas.append(_make_persona(study_id, segment))
 
     with Session(get_engine()) as session:
         for p in personas:

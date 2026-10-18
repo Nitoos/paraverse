@@ -10,19 +10,39 @@ const DEFAULT_SEGMENTS: Record<string, number> = {
   occasional: 1,
 };
 
-const BASE = "http://localhost:3001";
+const SEGMENT_LABELS: Record<string, string> = {
+  new_hire: "New Hire",
+  power_user: "Power User",
+  non_native: "Non-Native Speaker",
+  frontline_mobile: "Frontline Mobile",
+  low_vision: "Low Vision",
+  occasional: "Occasional User",
+};
 
+const SEGMENT_ICONS: Record<string, string> = {
+  new_hire: "👤",
+  power_user: "⚡",
+  non_native: "🌐",
+  frontline_mobile: "📱",
+  low_vision: "👁",
+  occasional: "🕐",
+};
+
+const BASE = "http://localhost:3001";
 const DEFAULT_VARIANTS: Record<string, string> = {
   baseline: `${BASE}/baseline/`,
   flawed: `${BASE}/flawed/`,
   fixed: `${BASE}/fixed/`,
 };
 
+const DEMO_STUDY_ID = "cd388de5-cbe0-4b98-8aa7-abea51c7f503";
+
 interface Props {
   onStudyCreated: (studyId: string, variantMap: Record<string, string>) => void;
+  onLoadDemo: (studyId: string) => void;
 }
 
-export default function Setup({ onStudyCreated }: Props) {
+export default function Setup({ onStudyCreated, onLoadDemo }: Props) {
   const [taskGoal, setTaskGoal] = useState("Submit an expense report for a team dinner on 2024-12-01 for $150.");
   const [segments, setSegments] = useState(DEFAULT_SEGMENTS);
   const [variants, setVariants] = useState(DEFAULT_VARIANTS);
@@ -36,11 +56,7 @@ export default function Setup({ onStudyCreated }: Props) {
     setLoading(true);
     setError(null);
     try {
-      const payload: StudyPayload = {
-        task_goal: taskGoal,
-        segment_mix: segments,
-        variant_urls: variants,
-      };
+      const payload: StudyPayload = { task_goal: taskGoal, segment_mix: segments, variant_urls: variants };
       const res = await createStudy(payload);
       const variantMap: Record<string, string> = {};
       for (const v of res.variants) variantMap[v.id] = v.name;
@@ -53,34 +69,128 @@ export default function Setup({ onStudyCreated }: Props) {
   }
 
   return (
-    <div className="min-h-screen flex items-start justify-center p-8 bg-gray-950">
-      <div className="w-full max-w-2xl">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-white mb-1">Paraverse</h1>
-          <p className="text-gray-400">Synthetic workforce UX simulation</p>
+    <div style={{ minHeight: "100vh", background: "#f8f9fa" }}>
+      {/* Top nav */}
+      <div style={{ background: "#fff", borderBottom: "1px solid #e8eaed", padding: "0 24px", height: 64, display: "flex", alignItems: "center", gap: 12 }}>
+        <div style={{ width: 32, height: 32, borderRadius: 8, background: "linear-gradient(135deg, #1a73e8, #34a853)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <span style={{ color: "#fff", fontSize: 14, fontWeight: 700 }}>P</span>
+        </div>
+        <span style={{ fontWeight: 700, fontSize: 18, color: "#202124" }}>Paraverse</span>
+        <span style={{ color: "#dadce0", marginLeft: 4 }}>|</span>
+        <span style={{ color: "#5f6368", fontSize: 14 }}>Synthetic UX Simulation</span>
+      </div>
+
+      <div style={{ maxWidth: 720, margin: "0 auto", padding: "40px 24px" }}>
+        {/* Demo banner */}
+        <div style={{
+          background: "linear-gradient(135deg, #e8f0fe 0%, #e6f4ea 100%)",
+          border: "1px solid #c5d9f7",
+          borderRadius: 16,
+          padding: "20px 24px",
+          marginBottom: 32,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: 16,
+        }}>
+          <div>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+              <span style={{ fontSize: 18 }}>🎬</span>
+              <span style={{ fontWeight: 700, color: "#1a73e8", fontSize: 15 }}>Pre-computed Demo Ready</span>
+            </div>
+            <p style={{ color: "#3c4043", fontSize: 13, margin: 0 }}>
+              32 agents · Baseline vs Flawed Redesign · All results computed
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => onLoadDemo(DEMO_STUDY_ID)}
+            style={{
+              background: "#1a73e8",
+              color: "#fff",
+              border: "none",
+              borderRadius: 8,
+              padding: "10px 20px",
+              fontWeight: 600,
+              fontSize: 14,
+              cursor: "pointer",
+              whiteSpace: "nowrap",
+              boxShadow: "0 2px 6px rgba(26,115,232,0.3)",
+            }}
+          >
+            View Demo →
+          </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="bg-gray-900 rounded-xl p-6 border border-gray-800">
-            <label className="block text-sm font-medium text-gray-300 mb-2">Task Goal</label>
+        {/* Page title */}
+        <div style={{ marginBottom: 28 }}>
+          <h1 style={{ fontSize: 26, fontWeight: 700, color: "#202124", margin: "0 0 6px" }}>New Study</h1>
+          <p style={{ color: "#5f6368", fontSize: 14, margin: 0 }}>Configure your synthetic workforce simulation</p>
+        </div>
+
+        <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+          {/* Task goal */}
+          <div className="card" style={{ padding: 24 }}>
+            <label style={{ display: "block", fontWeight: 600, fontSize: 14, color: "#202124", marginBottom: 8 }}>
+              Task Goal
+            </label>
+            <p style={{ color: "#5f6368", fontSize: 12, marginBottom: 12 }}>
+              What should agents try to accomplish on the UI?
+            </p>
             <textarea
               value={taskGoal}
               onChange={(e) => setTaskGoal(e.target.value)}
               rows={3}
-              className="w-full bg-gray-800 text-white rounded-lg px-4 py-3 text-sm border border-gray-700 focus:outline-none focus:border-indigo-500"
               required
+              style={{
+                width: "100%",
+                background: "#f8f9fa",
+                border: "1px solid #dadce0",
+                borderRadius: 8,
+                padding: "12px 14px",
+                fontSize: 14,
+                color: "#202124",
+                resize: "vertical",
+                outline: "none",
+                fontFamily: "inherit",
+                lineHeight: 1.5,
+              }}
             />
           </div>
 
-          <div className="bg-gray-900 rounded-xl p-6 border border-gray-800">
-            <div className="flex items-center justify-between mb-4">
-              <label className="text-sm font-medium text-gray-300">Agent Mix</label>
-              <span className="text-xs text-gray-500">{totalAgents} agents total</span>
+          {/* Agent mix */}
+          <div className="card" style={{ padding: 24 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+              <div>
+                <label style={{ fontWeight: 600, fontSize: 14, color: "#202124" }}>Agent Mix</label>
+                <p style={{ color: "#5f6368", fontSize: 12, margin: "4px 0 0" }}>Choose how many of each persona type to simulate</p>
+              </div>
+              <span style={{
+                background: "#e8f0fe",
+                color: "#1a73e8",
+                fontWeight: 700,
+                fontSize: 13,
+                padding: "4px 12px",
+                borderRadius: 20,
+              }}>
+                {totalAgents} agents
+              </span>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
               {Object.entries(segments).map(([seg, count]) => (
-                <div key={seg} className="flex items-center gap-3">
-                  <span className="text-sm text-gray-400 w-36 capitalize">{seg.replace("_", " ")}</span>
+                <div key={seg} style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 10,
+                  background: "#f8f9fa",
+                  borderRadius: 8,
+                  padding: "10px 14px",
+                  border: "1px solid #e8eaed",
+                }}>
+                  <span style={{ fontSize: 18 }}>{SEGMENT_ICONS[seg]}</span>
+                  <span style={{ flex: 1, fontSize: 13, color: "#3c4043", fontWeight: 500 }}>
+                    {SEGMENT_LABELS[seg] ?? seg}
+                  </span>
                   <input
                     type="number"
                     min={0}
@@ -89,24 +199,54 @@ export default function Setup({ onStudyCreated }: Props) {
                     onChange={(e) =>
                       setSegments((s) => ({ ...s, [seg]: parseInt(e.target.value) || 0 }))
                     }
-                    className="w-16 bg-gray-800 text-white text-center rounded-lg px-2 py-1 text-sm border border-gray-700 focus:outline-none focus:border-indigo-500"
+                    style={{
+                      width: 48,
+                      background: "#fff",
+                      border: "1px solid #dadce0",
+                      borderRadius: 6,
+                      padding: "4px 8px",
+                      textAlign: "center",
+                      fontSize: 14,
+                      fontWeight: 600,
+                      color: "#202124",
+                      outline: "none",
+                    }}
                   />
                 </div>
               ))}
             </div>
           </div>
 
-          <div className="bg-gray-900 rounded-xl p-6 border border-gray-800">
-            <label className="block text-sm font-medium text-gray-300 mb-4">Variant URLs</label>
-            <div className="space-y-3">
+          {/* Variant URLs */}
+          <div className="card" style={{ padding: 24 }}>
+            <label style={{ display: "block", fontWeight: 600, fontSize: 14, color: "#202124", marginBottom: 4 }}>Variant URLs</label>
+            <p style={{ color: "#5f6368", fontSize: 12, marginBottom: 16 }}>Each URL is a different version of the UI to test</p>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               {Object.entries(variants).map(([name, url]) => (
-                <div key={name} className="flex items-center gap-3">
-                  <span className="text-sm text-gray-400 w-20 capitalize">{name}</span>
+                <div key={name} style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                  <span style={{
+                    width: 72,
+                    fontSize: 12,
+                    fontWeight: 600,
+                    color: "#5f6368",
+                    textTransform: "capitalize",
+                    flexShrink: 0,
+                  }}>{name}</span>
                   <input
                     type="url"
                     value={url}
                     onChange={(e) => setVariants((v) => ({ ...v, [name]: e.target.value }))}
-                    className="flex-1 bg-gray-800 text-white rounded-lg px-3 py-2 text-sm border border-gray-700 focus:outline-none focus:border-indigo-500"
+                    style={{
+                      flex: 1,
+                      background: "#f8f9fa",
+                      border: "1px solid #dadce0",
+                      borderRadius: 8,
+                      padding: "9px 12px",
+                      fontSize: 13,
+                      color: "#202124",
+                      outline: "none",
+                      fontFamily: "monospace",
+                    }}
                   />
                 </div>
               ))}
@@ -114,7 +254,7 @@ export default function Setup({ onStudyCreated }: Props) {
           </div>
 
           {error && (
-            <div className="bg-red-900/30 border border-red-700 rounded-lg px-4 py-3 text-red-300 text-sm">
+            <div style={{ background: "#fce8e6", border: "1px solid #f28b82", borderRadius: 8, padding: "12px 16px", color: "#c5221f", fontSize: 13 }}>
               {error}
             </div>
           )}
@@ -122,9 +262,10 @@ export default function Setup({ onStudyCreated }: Props) {
           <button
             type="submit"
             disabled={loading || totalAgents === 0}
-            className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-semibold py-3 rounded-xl transition-colors"
+            className="btn-primary"
+            style={{ fontSize: 15, padding: "14px 24px", borderRadius: 10 }}
           >
-            {loading ? "Launching study…" : `Launch ${totalAgents} agents`}
+            {loading ? "Launching study…" : `Launch ${totalAgents} Agents`}
           </button>
         </form>
       </div>
