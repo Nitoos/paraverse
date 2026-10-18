@@ -1,0 +1,138 @@
+[
+  {
+    "name": "Expense form: clear labels vs jargon",
+    "known_winner": "baseline",
+    "set": "tuning",
+    "variants": [
+      {"label": "baseline", "description": "Clear category labels, plain language"},
+      {"label": "jargon", "description": "Cost Center Code with no explanation"}
+    ],
+    "segment_outcomes": {
+      "new_hire":         {"baseline": 0.85, "jargon": 0.40},
+      "power_user":       {"baseline": 0.95, "jargon": 0.80},
+      "non_native":       {"baseline": 0.75, "jargon": 0.25},
+      "frontline_mobile": {"baseline": 0.70, "jargon": 0.20},
+      "low_vision":       {"baseline": 0.65, "jargon": 0.55},
+      "occasional":       {"baseline": 0.80, "jargon": 0.35}
+    }
+  },
+  {
+    "name": "Onboarding: multi-page vs single-page",
+    "known_winner": "single_page",
+    "set": "tuning",
+    "variants": [
+      {"label": "multi_page", "description": "7-step wizard with separate pages"},
+      {"label": "single_page", "description": "All fields on one scrollable page"}
+    ],
+    "segment_outcomes": {
+      "new_hire":         {"multi_page": 0.60, "single_page": 0.80},
+      "power_user":       {"multi_page": 0.70, "single_page": 0.90},
+      "non_native":       {"multi_page": 0.50, "single_page": 0.65},
+      "frontline_mobile": {"multi_page": 0.45, "single_page": 0.75},
+      "low_vision":       {"multi_page": 0.55, "single_page": 0.60},
+      "occasional":       {"multi_page": 0.55, "single_page": 0.72}
+    }
+  },
+  {
+    "name": "Leave request: dropdown vs date picker",
+    "known_winner": "date_picker",
+    "set": "tuning",
+    "variants": [
+      {"label": "dropdown", "description": "Separate dropdowns for day, month, year"},
+      {"label": "date_picker", "description": "Native HTML date input"}
+    ],
+    "segment_outcomes": {
+      "new_hire":         {"dropdown": 0.65, "date_picker": 0.88},
+      "power_user":       {"dropdown": 0.90, "date_picker": 0.92},
+      "non_native":       {"dropdown": 0.55, "date_picker": 0.80},
+      "frontline_mobile": {"dropdown": 0.40, "date_picker": 0.82},
+      "low_vision":       {"dropdown": 0.60, "date_picker": 0.70},
+      "occasional":       {"dropdown": 0.60, "date_picker": 0.85}
+    }
+  },
+  {
+    "name": "IT ticket: unmarked vs marked required fields",
+    "known_winner": "marked",
+    "set": "tuning",
+    "variants": [
+      {"label": "unmarked", "description": "Required fields have no visual indicator"},
+      {"label": "marked", "description": "Required fields marked with asterisk and label"}
+    ],
+    "segment_outcomes": {
+      "new_hire":         {"unmarked": 0.50, "marked": 0.85},
+      "power_user":       {"unmarked": 0.85, "marked": 0.90},
+      "non_native":       {"unmarked": 0.40, "marked": 0.75},
+      "frontline_mobile": {"unmarked": 0.35, "marked": 0.78},
+      "low_vision":       {"unmarked": 0.45, "marked": 0.70},
+      "occasional":       {"unmarked": 0.45, "marked": 0.82}
+    }
+  },
+  {
+    "name": "Benefits enrollment: jargon vs plain language",
+    "known_winner": "plain_language",
+    "set": "tuning",
+    "variants": [
+      {"label": "jargon", "description": "Terms like 'premium', 'deductible', 'co-pay' with no tooltips"},
+      {"label": "plain_language", "description": "Plain explanations: 'monthly cost', 'amount before insurance pays'"}
+    ],
+    "segment_outcomes": {
+      "new_hire":         {"jargon": 0.35, "plain_language": 0.82},
+      "power_user":       {"jargon": 0.80, "plain_language": 0.85},
+      "non_native":       {"jargon": 0.20, "plain_language": 0.70},
+      "frontline_mobile": {"jargon": 0.30, "plain_language": 0.75},
+      "low_vision":       {"jargon": 0.55, "plain_language": 0.68},
+      "occasional":       {"jargon": 0.40, "plain_language": 0.78}
+    }
+  },
+  {
+    "name": "Password reset: multi-step vs single-step",
+    "known_winner": "single_step",
+    "set": "tuning",
+    "variants": [
+      {"label": "multi_step", "description": "3-step: enter email, wait for code, enter new password"},
+      {"label": "single_step", "description": "Enter email and new password together, confirm link sent"}
+    ],
+    "segment_outcomes": {
+      "new_hire":         {"multi_step": 0.72, "single_step": 0.88},
+      "power_user":       {"multi_step": 0.85, "single_step": 0.92},
+      "non_native":       {"multi_step": 0.60, "single_step": 0.80},
+      "frontline_mobile": {"multi_step": 0.50, "single_step": 0.85},
+      "low_vision":       {"multi_step": 0.65, "single_step": 0.72},
+      "occasional":       {"multi_step": 0.62, "single_step": 0.84}
+    }
+  },
+  {
+    "name": "Profile update: inline edit vs modal dialog",
+    "known_winner": "inline_edit",
+    "set": "held_out",
+    "variants": [
+      {"label": "modal", "description": "Edit profile opens a modal dialog with Save/Cancel"},
+      {"label": "inline_edit", "description": "Click any field to edit it in place, auto-saves"}
+    ],
+    "segment_outcomes": {
+      "new_hire":         {"modal": 0.65, "inline_edit": 0.80},
+      "power_user":       {"modal": 0.75, "inline_edit": 0.95},
+      "non_native":       {"modal": 0.55, "inline_edit": 0.72},
+      "frontline_mobile": {"modal": 0.48, "inline_edit": 0.82},
+      "low_vision":       {"modal": 0.60, "inline_edit": 0.65},
+      "occasional":       {"modal": 0.58, "inline_edit": 0.76}
+    }
+  },
+  {
+    "name": "Report submission: flat form vs guided wizard",
+    "known_winner": "wizard",
+    "set": "held_out",
+    "variants": [
+      {"label": "flat_form", "description": "All 12 fields on one long page"},
+      {"label": "wizard", "description": "4-step wizard: basic info, details, attachments, review"}
+    ],
+    "segment_outcomes": {
+      "new_hire":         {"flat_form": 0.45, "wizard": 0.80},
+      "power_user":       {"flat_form": 0.80, "wizard": 0.75},
+      "non_native":       {"flat_form": 0.38, "wizard": 0.72},
+      "frontline_mobile": {"flat_form": 0.30, "wizard": 0.70},
+      "low_vision":       {"flat_form": 0.52, "wizard": 0.68},
+      "occasional":       {"flat_form": 0.42, "wizard": 0.78}
+    }
+  }
+]
