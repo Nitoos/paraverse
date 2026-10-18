@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Submit Expense Report</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, sans-serif; background: #f5f7fa; color: #1a1a2e; }
+    .container { max-width: 600px; margin: 40px auto; padding: 0 16px; }
+    h1 { font-size: 1.5rem; margin-bottom: 8px; }
+    .subtitle { color: #666; margin-bottom: 24px; font-size: 0.9rem; }
+    .step { display: none; background: #fff; border-radius: 12px; padding: 32px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+    .step.active { display: block; }
+    .step-indicator { display: flex; gap: 8px; margin-bottom: 24px; }
+    .step-dot { width: 28px; height: 28px; border-radius: 50%; background: #e0e0e0; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 600; color: #666; }
+    .step-dot.active { background: #4f46e5; color: #fff; }
+    .step-dot.done { background: #10b981; color: #fff; }
+    h2 { font-size: 1.1rem; margin-bottom: 20px; color: #1a1a2e; }
+    .field { margin-bottom: 20px; }
+    label { display: block; font-size: 0.875rem; font-weight: 600; margin-bottom: 6px; color: #374151; }
+    label .req { color: #dc2626; margin-left: 2px; }
+    input, select, textarea { width: 100%; padding: 10px 14px; border: 1.5px solid #d1d5db; border-radius: 8px; font-size: 0.95rem; background: #fff; transition: border-color 0.2s; }
+    input:focus, select:focus, textarea:focus { outline: none; border-color: #4f46e5; }
+    textarea { resize: vertical; min-height: 80px; }
+    .error { color: #dc2626; font-size: 0.8rem; margin-top: 4px; display: block; }
+    .btn { display: inline-block; padding: 12px 28px; border-radius: 8px; font-size: 0.95rem; font-weight: 600; cursor: pointer; border: none; transition: all 0.2s; }
+    .btn-primary { background: #4f46e5; color: #fff; width: 100%; margin-top: 8px; }
+    .btn-primary:hover { background: #4338ca; }
+    .btn-secondary { background: #f3f4f6; color: #374151; margin-right: 8px; }
+    .btn-secondary:hover { background: #e5e7eb; }
+    .btn-group { display: flex; gap: 8px; margin-top: 8px; }
+    .success { text-align: center; padding: 40px 20px; }
+    .success .icon { font-size: 3rem; margin-bottom: 16px; }
+    .success h2 { color: #10b981; }
+    .success p { color: #666; margin-top: 8px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Submit Expense Report</h1>
+    <p class="subtitle">Please complete all steps to submit your expense claim.</p>
+
+    <div class="step-indicator" id="step-indicator">
+      <div class="step-dot active" id="dot-1">1</div>
+      <div class="step-dot" id="dot-2">2</div>
+      <div class="step-dot" id="dot-3">3</div>
+      <div class="step-dot" id="dot-4">4</div>
+    </div>
+
+    <!-- Step 1: Basic Info -->
+    <div class="step active" id="step-1">
+      <h2>Step 1: Expense Details</h2>
+      <div class="field">
+        <label for="expense-title">Expense Title <span class="req">*</span></label>
+        <input type="text" id="expense-title" placeholder="e.g. Team lunch, Flight to NYC" />
+        <span class="error" id="err-title" style="display:none">Please enter an expense title.</span>
+      </div>
+      <div class="field">
+        <label for="expense-date">Date of Expense <span class="req">*</span></label>
+        <input type="date" id="expense-date" />
+        <span class="error" id="err-date" style="display:none">Please select the expense date.</span>
+      </div>
+      <button class="btn btn-primary" id="btn-next-1" onclick="nextStep(1)">Next →</button>
+    </div>
+
+    <!-- Step 2: Amount -->
+    <div class="step" id="step-2">
+      <h2>Step 2: Amount</h2>
+      <div class="field">
+        <label for="expense-amount">Amount <span class="req">*</span></label>
+        <input type="number" id="expense-amount" placeholder="0.00" min="0" step="0.01" />
+        <span class="error" id="err-amount" style="display:none">Please enter a valid amount.</span>
+      </div>
+      <div class="field">
+        <label for="expense-currency">Currency</label>
+        <select id="expense-currency">
+          <option value="USD">USD – US Dollar</option>
+          <option value="EUR">EUR – Euro</option>
+          <option value="GBP">GBP – British Pound</option>
+          <option value="INR">INR – Indian Rupee</option>
+        </select>
+      </div>
+      <div class="btn-group">
+        <button class="btn btn-secondary" onclick="prevStep(2)">← Back</button>
+        <button class="btn btn-primary" id="btn-next-2" onclick="nextStep(2)" style="flex:1">Next →</button>
+      </div>
+    </div>
+
+    <!-- Step 3: Category -->
+    <div class="step" id="step-3">
+      <h2>Step 3: Category & Description</h2>
+      <div class="field">
+        <label for="expense-category">Category <span class="req">*</span></label>
+        <select id="expense-category">
+          <option value="">Select a category...</option>
+          <option value="travel">Travel</option>
+          <option value="meals">Meals & Entertainment</option>
+          <option value="supplies">Office Supplies</option>
+          <option value="training">Training & Education</option>
+          <option value="other">Other</option>
+        </select>
+        <span class="error" id="err-category" style="display:none">Please select a category.</span>
+      </div>
+      <div class="field">
+        <label for="expense-description">Description <span class="req">*</span></label>
+        <textarea id="expense-description" placeholder="Briefly describe this expense..."></textarea>
+        <span class="error" id="err-desc" style="display:none">Please enter a description.</span>
+      </div>
+      <div class="btn-group">
+        <button class="btn btn-secondary" onclick="prevStep(3)">← Back</button>
+        <button class="btn btn-primary" id="btn-next-3" onclick="nextStep(3)" style="flex:1">Next →</button>
+      </div>
+    </div>
+
+    <!-- Step 4: Receipt -->
+    <div class="step" id="step-4">
+      <h2>Step 4: Attach Receipt</h2>
+      <div class="field">
+        <label for="receipt-upload">Receipt (optional)</label>
+        <input type="file" id="receipt-upload" accept="image/*,.pdf" />
+      </div>
+      <button class="btn btn-primary" id="btn-submit" onclick="submitForm()">Submit Expense Report</button>
+    </div>
+
+    <!-- Success -->
+    <div class="step" id="step-success">
+      <div class="success">
+        <div class="icon">✅</div>
+        <h2>Expense Submitted!</h2>
+        <p>Your expense report has been submitted successfully.<br>You'll receive a confirmation email shortly.</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function nextStep(current) {
+      if (!validate(current)) return;
+      document.getElementById('step-' + current).classList.remove('active');
+      document.getElementById('dot-' + current).classList.remove('active');
+      document.getElementById('dot-' + current).classList.add('done');
+      const next = current + 1;
+      if (next <= 4) {
+        document.getElementById('step-' + next).classList.add('active');
+        document.getElementById('dot-' + next).classList.add('active');
+      }
+    }
+    function prevStep(current) {
+      document.getElementById('step-' + current).classList.remove('active');
+      document.getElementById('dot-' + current).classList.remove('active');
+      const prev = current - 1;
+      document.getElementById('step-' + prev).classList.add('active');
+      document.getElementById('dot-' + prev).classList.remove('done');
+      document.getElementById('dot-' + prev).classList.add('active');
+    }
+    function validate(step) {
+      let ok = true;
+      if (step === 1) {
+        const title = document.getElementById('expense-title').value.trim();
+        const date = document.getElementById('expense-date').value;
+        document.getElementById('err-title').style.display = title ? 'none' : 'block';
+        document.getElementById('err-date').style.display = date ? 'none' : 'block';
+        ok = title && date;
+      } else if (step === 2) {
+        const amount = document.getElementById('expense-amount').value;
+        document.getElementById('err-amount').style.display = (amount && parseFloat(amount) > 0) ? 'none' : 'block';
+        ok = amount && parseFloat(amount) > 0;
+      } else if (step === 3) {
+        const cat = document.getElementById('expense-category').value;
+        const desc = document.getElementById('expense-description').value.trim();
+        document.getElementById('err-category').style.display = cat ? 'none' : 'block';
+        document.getElementById('err-desc').style.display = desc ? 'none' : 'block';
+        ok = cat && desc;
+      }
+      return ok;
+    }
+    function submitForm() {
+      document.getElementById('step-4').classList.remove('active');
+      document.getElementById('dot-4').classList.remove('active');
+      document.getElementById('dot-4').classList.add('done');
+      document.getElementById('step-success').classList.add('active');
+    }
+  </script>
+</body>
+</html>
